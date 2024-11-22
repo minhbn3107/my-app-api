@@ -77,4 +77,4 @@ playlistSchema.pre("save", function (next) {
     next();
 });
 
-module.exports = mongoose.model("Song", playlistSchema);
+module.exports = mongoose.model("Playlist", playlistSchema);

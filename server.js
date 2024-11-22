@@ -22,7 +22,11 @@ app.get("/", (req, res) => {
 connectDB();
 app.use("/register", require("./routes/register"));
 app.use("/login", require("./routes/login"));
-app.use("/users", require("./routes/api/users"));
+app.use("/api/users", require("./routes/api/users"));
+app.use("/api/songs", require("./routes/api/songs"));
+app.use("/api/playlists", require("./routes/api/playlists"));
+app.use("/api/artists", require("./routes/api/artists"));
+app.use("/api/search", require("./routes/api/search"));
 
 mongoose.connection.once("open", () => {
     console.log("Connected to MongoDB");
