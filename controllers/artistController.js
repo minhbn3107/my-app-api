@@ -1,12 +1,12 @@
 const User = require("../models/User");
 
-const getAllArtistNames = async (req, res) => {
+const getAllArtist = async (req, res) => {
     try {
-        const artists = await User.find({ isArtist: true }, "displayName");
+        const artists = await User.find({ isArtist: true });
 
         res.json({
             success: true,
-            artists: artists.map((a) => a.displayName),
+            artists: artists,
         });
     } catch (err) {
         res.status(500).json({
@@ -16,4 +16,4 @@ const getAllArtistNames = async (req, res) => {
     }
 };
 
-module.exports = { getAllArtistNames };
+module.exports = { getAllArtist };

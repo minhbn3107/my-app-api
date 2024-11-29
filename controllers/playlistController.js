@@ -47,9 +47,26 @@ const createPlaylist = async (req, res) => {
     }
 };
 
-const getAllPlaylistNames = async (req, res) => {
+const getAllPlaylists = async (req, res) => {
     try {
-        const playlists = await Playlist.find({}, "title");
+        const playlists = await Playlist.find({ isPublic: true });
+
+        res.json({
+            success: true,
+            playlists: playlists,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+const getAllPlaylistNamesOfUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const playlists = await Playlist.find({ _id: userId }, "title");
         res.json({
             success: true,
             playlists: playlists.map((p) => p.title),
@@ -62,4 +79,8 @@ const getAllPlaylistNames = async (req, res) => {
     }
 };
 
-module.exports = { createPlaylist, getAllPlaylistNames };
+module.exports = {
+    createPlaylist,
+    getAllPlaylists,
+    getAllPlaylistNamesOfUser,
+};

@@ -3,6 +3,7 @@ const router = express.Router();
 const playlistController = require("../../controllers/playlistController");
 
 router.post("/", playlistController.createPlaylist);
-router.get("/names", playlistController.getAllPlaylistNames);
+router.get("/", playlistController.getAllPlaylists);
+router.get("/names-of-user", playlistController.getAllPlaylistNamesOfUser);
 
 module.exports = router;

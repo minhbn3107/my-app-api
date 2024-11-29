@@ -15,3 +15,5 @@ Api
 -   get all artist name
 -   get all playlist name
 -   search song, playlist, artist
+
+*   forget password, update artist image, upgrade to artist, newest song, follow an artist, ending song update control button, show more description

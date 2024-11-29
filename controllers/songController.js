@@ -46,43 +46,64 @@ const createSong = async (req, res) => {
             artwork: artwork || undefined,
         });
 
-        // Create new playlist if playlistName is provided
+        // Handle playlist creation/addition
         if (playlistName) {
-            const playlist = await Playlist.create({
+            // Check if a playlist with the same name already exists for the user
+            let playlist = await Playlist.findOne({
                 title: playlistName,
                 creator: artistId,
-                creatorName: artistName,
-                artwork: playlistArtwork || undefined,
-                description: description || undefined,
-                songs: [
-                    {
-                        songId: song._id,
-                        title: song.title,
-                        artistName: song.artistName,
-                        artwork: song.artwork,
-                    },
-                ],
             });
 
-            // Update user's playlist array
-            await User.findByIdAndUpdate(artistId, {
-                $push: { myPlaylists: playlist._id },
-            });
+            // If playlist doesn't exist, create a new one
+            if (!playlist) {
+                playlist = await Playlist.create({
+                    title: playlistName,
+                    creator: artistId,
+                    creatorName: artistName,
+                    artwork: playlistArtwork || undefined,
+                    description: description || undefined,
+                    songs: [],
+                });
 
-            // Update song's playlist array
-            await Song.findByIdAndUpdate(song._id, {
-                $push: {
-                    playlists: {
-                        playlistId: playlist._id,
-                        playlistName: playlist.title,
+                // Update user's playlist array
+                await User.findByIdAndUpdate(artistId, {
+                    $push: { myPlaylists: playlist._id },
+                });
+            }
+
+            // Check if song is already in the playlist
+            const songExistsInPlaylist = playlist.songs.some(
+                (songItem) => songItem.songId.toString() === song._id.toString()
+            );
+
+            // Add song to playlist if not already present
+            if (!songExistsInPlaylist) {
+                playlist.songs.push({
+                    songId: song._id,
+                    title: song.title,
+                    artistName: song.artistName,
+                    artwork: song.artwork,
+                });
+                await playlist.save();
+
+                // Update song's playlist array
+                await Song.findByIdAndUpdate(song._id, {
+                    $push: {
+                        playlists: {
+                            playlistId: playlist._id,
+                            playlistName: playlist.title,
+                        },
                     },
-                },
-            });
+                });
+            }
 
             return res.status(201).json({
                 success: true,
                 song,
                 playlist,
+                message: songExistsInPlaylist
+                    ? "Song already exists in the playlist"
+                    : "Song added to playlist",
             });
         }
 
@@ -98,10 +119,13 @@ const createSong = async (req, res) => {
     }
 };
 
-const getSongsByArtist = async (req, res) => {
+const getSongsOfArtist = async (req, res) => {
     try {
+        const artistID = req.params.artistID;
+        console.log(artistID);
+
         const songs = await Song.find({
-            artistName: new RegExp(req.params.artistName, "i"),
+            artist: artistID,
         });
 
         if (!songs.length) {
@@ -123,22 +147,24 @@ const getSongsByArtist = async (req, res) => {
     }
 };
 
-const getSongsByPlaylist = async (req, res) => {
+const getSongsOfPlaylist = async (req, res) => {
     try {
-        const playlist = await Playlist.findOne({
-            title: new RegExp(req.params.playlistName, "i"),
-        }).populate("songs.songId");
+        const playlistID = req.params.playlistID;
 
-        if (!playlist) {
+        const songs = await Song.find({
+            "playlists.playlistId": playlistID,
+        }).exec();
+
+        if (!songs.length) {
             return res.status(404).json({
                 success: false,
-                message: "Playlist not found",
+                message: "No songs found for this playlist",
             });
         }
 
         res.json({
             success: true,
-            songs: playlist.songs,
+            songs,
         });
     } catch (err) {
         res.status(500).json({
@@ -148,4 +174,4 @@ const getSongsByPlaylist = async (req, res) => {
     }
 };
 
-module.exports = { createSong, getSongsByArtist, getSongsByPlaylist };
+module.exports = { createSong, getSongsOfArtist, getSongsOfPlaylist };
