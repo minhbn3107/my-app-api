@@ -42,6 +42,15 @@ const userSchema = new Schema({
             ref: "Playlist",
         },
     ],
+    followers: [
+        {
+            userId: {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+            username: String,
+        },
+    ],
 });
 
 userSchema.index({ username: 1 });

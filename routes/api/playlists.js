@@ -4,6 +4,7 @@ const playlistController = require("../../controllers/playlistController");
 
 router.post("/", playlistController.createPlaylist);
 router.get("/", playlistController.getAllPlaylists);
-router.get("/names-of-user", playlistController.getAllPlaylistNamesOfUser);
+router.post("/follow", playlistController.toggleFollowPlaylist);
+router.get("/names", playlistController.getAllPlaylistNamesOfUser);
 
 module.exports = router;

@@ -65,11 +65,12 @@ const getAllPlaylists = async (req, res) => {
 
 const getAllPlaylistNamesOfUser = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const playlists = await Playlist.find({ _id: userId }, "title");
+        const { userId } = req.query;
+
+        const playlists = await Playlist.find({ creator: userId }, "title");
         res.json({
             success: true,
-            playlists: playlists.map((p) => p.title),
+            playlists: playlists.map((playlist) => playlist.title),
         });
     } catch (err) {
         res.status(500).json({
@@ -79,8 +80,58 @@ const getAllPlaylistNamesOfUser = async (req, res) => {
     }
 };
 
+const toggleFollowPlaylist = async (req, res) => {
+    try {
+        if (!req.body.followID)
+            return res
+                .status(400)
+                .json({ message: "Follow Playlist ID required" });
+
+        const followPlaylistId = req.body.followID;
+
+        const followPlaylist = await Playlist.findById(followPlaylistId);
+        if (!followPlaylistId)
+            return res
+                .status(404)
+                .json({ message: `Playlist ID ${followPlaylistId} not found` });
+
+        const currentUserId = req?.body?.id;
+
+        const isFollowing = followPlaylist.followers.some(
+            (follower) => follower.userId.toString() === currentUserId
+        );
+
+        if (isFollowing) {
+            followPlaylist.followers = followPlaylist.followers.filter(
+                (follower) => follower.userId.toString() !== currentUserId
+            );
+
+            await followPlaylist.save();
+
+            return res.status(200).json({
+                message: `Unfollowed ${followPlaylist.title}`,
+            });
+        } else {
+            followPlaylist.followers.push({
+                userId: currentUserId,
+                username: req.body.username,
+            });
+
+            await followPlaylist.save();
+
+            return res.status(200).json({
+                message: `Followed ${followPlaylist.title}`,
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred", error });
+    }
+};
+
 module.exports = {
     createPlaylist,
     getAllPlaylists,
     getAllPlaylistNamesOfUser,
+    toggleFollowPlaylist,
 };

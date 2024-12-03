@@ -174,4 +174,105 @@ const getSongsOfPlaylist = async (req, res) => {
     }
 };
 
-module.exports = { createSong, getSongsOfArtist, getSongsOfPlaylist };
+const getNewestSongs = async (req, res) => {
+    try {
+        const songs = await Song.find().sort({ createdAt: -1 }).limit(3).exec();
+
+        if (!songs.length) {
+            return res.status(404).json({
+                success: false,
+                message: "No songs found",
+            });
+        }
+
+        res.json({
+            success: true,
+            songs,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+const toggleLikeSong = async (req, res) => {
+    try {
+        const { userId, songId } = req.body;
+
+        // Validate input
+        if (!userId || !songId) {
+            return res.status(400).json({
+                message: "User ID and Song ID are required",
+            });
+        }
+
+        // Find the song
+        const song = await Song.findById(songId);
+        if (!song) {
+            return res.status(404).json({ message: "Song not found" });
+        }
+
+        // Find the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if the song is already liked by the user
+        const isLiked = user.likedSongs.includes(songId);
+
+        if (isLiked) {
+            // Unlike the song
+            await User.findByIdAndUpdate(userId, {
+                $pull: { likedSongs: songId },
+            });
+
+            // Decrement likes count
+            const updatedSong = await Song.findByIdAndUpdate(
+                songId,
+                { $inc: { likes: -1 } },
+                { new: true } // Return the updated document
+            );
+
+            res.status(200).json({
+                message: `User ${user.displayName} unliked Song ${updatedSong.title}`,
+                isLiked: false,
+                likes: updatedSong.likes,
+            });
+        } else {
+            // Like the song
+            await User.findByIdAndUpdate(userId, {
+                $addToSet: { likedSongs: songId },
+            });
+
+            // Increment likes count
+            const updatedSong = await Song.findByIdAndUpdate(
+                songId,
+                { $inc: { likes: 1 } },
+                { new: true } // Return the updated document
+            );
+
+            res.status(200).json({
+                message: `User ${user.displayName} liked Song ${updatedSong.title}`,
+                isLiked: true,
+                likes: updatedSong.likes,
+            });
+        }
+    } catch (error) {
+        console.error("Error toggling song like:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+};
+
+module.exports = {
+    createSong,
+    getSongsOfArtist,
+    getSongsOfPlaylist,
+    getNewestSongs,
+    toggleLikeSong,
+};

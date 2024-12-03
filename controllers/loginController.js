@@ -8,11 +8,10 @@ const handleLogin = async (req, res) => {
             .status(400)
             .json({ message: "Username and password are required." });
     const foundUser = await User.findOne({ username: user }).exec();
-    if (!foundUser) return res.sendStatus(401); //Unauthorized
-    // evaluate password
+    if (!foundUser) return res.sendStatus(401);
     const match = await bcrypt.compare(pwd, foundUser.password);
     if (match) {
-        res.json({ match });
+        res.json({ match, foundUser });
     } else {
         res.sendStatus(401);
     }

@@ -4,7 +4,7 @@ const User = require("../models/User");
 
 const search = async (req, res) => {
     try {
-        const { query, type } = req.query;
+        const { query } = req.query;
 
         if (!query) {
             return res.status(400).json({
@@ -13,35 +13,30 @@ const search = async (req, res) => {
             });
         }
 
-        const searchResults = {};
+        searchResults = {};
 
-        if (!type || type === "songs") {
-            searchResults.songs = await Song.find({
-                $or: [
-                    { title: new RegExp(query, "i") },
-                    { artistName: new RegExp(query, "i") },
-                ],
-            }).limit(10);
-        }
+        searchResults.songs = await Song.find({
+            $or: [
+                { title: new RegExp(query, "i") },
+                { artistName: new RegExp(query, "i") },
+            ],
+        }).limit(10);
 
-        if (!type || type === "playlists") {
-            searchResults.playlists = await Playlist.find({
-                $or: [
-                    { title: new RegExp(query, "i") },
-                    { creatorName: new RegExp(query, "i") },
-                ],
-                isPublic: true,
-            }).limit(10);
-        }
+        searchResults.playlists = await Playlist.find({
+            $or: [
+                { title: new RegExp(query, "i") },
+                { creatorName: new RegExp(query, "i") },
+            ],
+            isPublic: true,
+        }).limit(10);
 
-        if (!type || type === "artists") {
-            searchResults.artists = await User.find({
-                $or: [{ displayName: new RegExp(query, "i") }],
-                isArtist: true,
-            })
-                .select("displayName imageURL")
-                .limit(10);
-        }
+        searchResults.artists = await User.find({
+            $or: [
+                { displayName: new RegExp(query, "i") },
+                { username: new RegExp(query, "i") },
+            ],
+            isArtist: true,
+        }).limit(10);
 
         res.json({
             success: true,
