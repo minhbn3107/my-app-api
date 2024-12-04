@@ -80,6 +80,47 @@ const getAllPlaylistNamesOfUser = async (req, res) => {
     }
 };
 
+const getPlaylistByArtistId = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const playlists = await Playlist.find({
+            creator: id,
+        });
+
+        res.json({
+            success: true,
+            playlists,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+const getPlaylistBySongId = async (req, res) => {
+    const { id } = req.params;
+    console.log(id);
+
+    try {
+        const playlist = await Playlist.find({
+            "songs.songId": id,
+        });
+
+        res.json({
+            success: true,
+            playlist,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
 const toggleFollowPlaylist = async (req, res) => {
     try {
         if (!req.body.followID)
@@ -134,4 +175,6 @@ module.exports = {
     getAllPlaylists,
     getAllPlaylistNamesOfUser,
     toggleFollowPlaylist,
+    getPlaylistByArtistId,
+    getPlaylistBySongId,
 };

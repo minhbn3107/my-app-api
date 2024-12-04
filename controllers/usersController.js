@@ -34,6 +34,24 @@ const getUser = async (req, res) => {
     res.json(user);
 };
 
+const toggleBeArtist = async (req, res) => {
+    if (!req?.body?.id)
+        return res.status(400).json({ message: "User ID required" });
+
+    const user = await User.findOne({ _id: req.body.id });
+
+    if (!user)
+        return res
+            .status(204)
+            .json({ message: `User ID ${req.body.id} not found)` });
+
+    user.isArtist = !user.isArtist;
+
+    await user.save();
+
+    res.json(user);
+};
+
 const getLikedSongsOfUser = async (req, res) => {
     if (!req?.params?.id || req?.params?.id === null)
         return res.status(400).json({ message: "User ID required" });
@@ -100,4 +118,5 @@ module.exports = {
     getUser,
     toggleFollowUser,
     getLikedSongsOfUser,
+    toggleBeArtist,
 };
