@@ -1,3 +1,5 @@
+const { sendVerificationEmail } = require("../config/node-mailer");
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 const getAllUsers = async (req, res) => {
@@ -112,6 +114,51 @@ const toggleFollowUser = async (req, res) => {
     }
 };
 
+const sendResetPasswordEmail = async (req, res) => {
+    try {
+        if (!req?.body?.email)
+            return res.status(400).json({ message: "Email required" });
+
+        const email = req.body.email;
+
+        const user = await User.findOne({ email: email });
+
+        if (!user)
+            return res
+                .status(404)
+                .json({ message: "User not found with email" });
+
+        await sendVerificationEmail(email, req.body.token);
+
+        res.json({ message: "Email sent" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        if (!req?.body?.email)
+            return res.status(400).json({ message: "Email required" });
+
+        if (!req?.body?.newPassword)
+            return res.status(400).json({ message: "New Password required" });
+
+        const email = req.body.email;
+        const pwd = req.body.newPassword;
+
+        const user = await User.findOne({ email: email });
+
+        user.password = await bcrypt.hash(pwd, 10);
+
+        const updatedUser = await user.save();
+
+        res.status(201).json({ success: `New password updated!`, updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllUsers,
     deleteUser,
@@ -119,4 +166,6 @@ module.exports = {
     toggleFollowUser,
     getLikedSongsOfUser,
     toggleBeArtist,
+    sendResetPasswordEmail,
+    resetPassword,
 };

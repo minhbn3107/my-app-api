@@ -15,6 +15,12 @@ const userSchema = new Schema({
         required: true,
         default: "https://i.ibb.co/WDxgSkK/avatar-icon.png",
     },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+    },
     password: {
         type: String,
         required: true,
